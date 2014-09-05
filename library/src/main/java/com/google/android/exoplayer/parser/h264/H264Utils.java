@@ -63,7 +63,7 @@ public class H264Utils {
   public final static int NAL_PPS = 8;
     
   private final static float[] ASPECT_RATIOS = new float[]{
-	  0.f / 1.f,
+	  0.f,
 	  1.f / 1.f,
 	  12.f / 11.f,
 	  10.f / 11.f,
