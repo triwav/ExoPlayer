@@ -101,6 +101,11 @@ public class MediaCodecVideoTrackRenderer extends MediaCodecTrackRenderer {
   private int currentHeight;
   private int lastReportedWidth;
   private int lastReportedHeight;
+  
+  /**
+   * The MediaFormat which was used to configure the codec.
+   */
+  private android.media.MediaFormat configuredFormat;
 
   /**
    * @param source The upstream source from which the renderer obtains samples.
@@ -314,6 +319,8 @@ public class MediaCodecVideoTrackRenderer extends MediaCodecTrackRenderer {
       MediaCrypto crypto) {
     codec.configure(format, surface, crypto, 0);
     codec.setVideoScalingMode(videoScalingMode);
+    
+    this.configuredFormat = format;
   }
 
   @Override
@@ -326,6 +333,11 @@ public class MediaCodecVideoTrackRenderer extends MediaCodecTrackRenderer {
     currentHeight = hasCrop
         ? format.getInteger(KEY_CROP_BOTTOM) - format.getInteger(KEY_CROP_TOP) + 1
         : format.getInteger(android.media.MediaFormat.KEY_HEIGHT);
+    
+    if( configuredFormat != null && configuredFormat.containsKey(android.media.MediaFormat.KEY_WIDTH) && configuredFormat.containsKey(android.media.MediaFormat.KEY_HEIGHT) ) {
+    	currentWidth = configuredFormat.getInteger(android.media.MediaFormat.KEY_WIDTH);
+    	currentHeight = configuredFormat.getInteger(android.media.MediaFormat.KEY_HEIGHT);
+    }
   }
 
   @Override
