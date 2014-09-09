@@ -49,12 +49,39 @@ public class H264Utils {
     public int frame_crop_right_offset;
     public int frame_crop_top_offset;
     public int frame_crop_bottom_offset;
+    
     public int vui_parameters_present_flag;
+    public int aspect_ratio_info_present_flag;
+    public int aspect_ratio_idc;
+    public int sar_width;
+    public int sar_height;
+    
+    public float display_aspect_ratio;
   }
 
   public final static int NAL_SPS = 7;
   public final static int NAL_PPS = 8;
-
+    
+  private final static float[] ASPECT_RATIOS = new float[]{
+	  0.f,
+	  1.f / 1.f,
+	  12.f / 11.f,
+	  10.f / 11.f,
+	  16.f / 11.f,
+	  40.f / 33.f,
+	  24.f / 11.f,
+	  20.f / 11.f,
+	  32.f / 11.f,
+	  80.f / 33.f,
+	  18.f / 11.f,
+	  15.f / 11.f,
+	  64.f / 33.f,
+	  160.f / 99.f,
+	  4.f / 3.f,
+	  3.f / 2.f,
+	  2.f / 1.f
+  };
+  
   static class BitReader {
     private int offset;
     private ByteBuffer data;
@@ -137,9 +164,9 @@ public class H264Utils {
       sps.qpprime_y_zero_transform_bypass_flag = reader.read(1);
       sps.seq_scaling_matrix_present_flag = reader.read(1);
       
-    // Skip scaling matrix list
+      // Skip scaling matrix list
       if( sps.seq_scaling_matrix_present_flag != 0 ) {
-      reader.read((sps.chroma_format_idc != 3) ? 8 : 12);
+    	  reader.read((sps.chroma_format_idc != 3) ? 8 : 12);
       }
     }
 
@@ -181,12 +208,43 @@ public class H264Utils {
     }
     
     sps.vui_parameters_present_flag = reader.read(1);
+    
+    if( sps.vui_parameters_present_flag != 0 )
+    {
+    	// Parse Video Usability Information
+    	sps.aspect_ratio_info_present_flag = reader.read(1);
+    	if( sps.aspect_ratio_info_present_flag != 0 )
+    	{
+    		sps.aspect_ratio_idc = reader.read(8);
+    		if( sps.aspect_ratio_idc == 0xff )
+    		{
+    			// Extended SAR
+    			sps.sar_width = reader.read(16);
+        		sps.sar_height = reader.read(16);
+        		
+        		// Calculate display aspect ratio
+        		sps.display_aspect_ratio = sps.sar_width / (float)sps.sar_height;
+    		}else
+    		{
+    			// No explicit SAR w/h
+        		// Lookup display aspect ratio
+        		sps.display_aspect_ratio = ASPECT_RATIOS[sps.aspect_ratio_idc];
+    		}
+    	}
+    }
+    
     sps.width = ((sps.pic_width_in_mbs_minus1 + 1) * 16) - (sps.frame_crop_right_offset*2) - (sps.frame_crop_left_offset*2);
     sps.height = ((2 - sps.frame_mbs_only_flag) * (sps.pic_height_in_map_units_minus1 + 1) * 16) - (sps.frame_crop_bottom_offset * 2) - (sps.frame_crop_top_offset * 2);
     
+    // Adjust for non-square aspect ratios
+    if( sps.display_aspect_ratio > 1.0f )
+    	sps.width *= sps.display_aspect_ratio;
+    else if( sps.display_aspect_ratio > 0.f )
+    	sps.height *= sps.display_aspect_ratio;
+    
     return true;
   }
-
+  
   public static void dumpNALs(ByteBuffer data) {
     int i = 0;
     int limit = data.limit();
