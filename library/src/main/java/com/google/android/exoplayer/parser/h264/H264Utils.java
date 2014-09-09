@@ -236,11 +236,11 @@ public class H264Utils {
     sps.width = ((sps.pic_width_in_mbs_minus1 + 1) * 16) - (sps.frame_crop_right_offset*2) - (sps.frame_crop_left_offset*2);
     sps.height = ((2 - sps.frame_mbs_only_flag) * (sps.pic_height_in_map_units_minus1 + 1) * 16) - (sps.frame_crop_bottom_offset * 2) - (sps.frame_crop_top_offset * 2);
     
-    // Adjust for non-square aspect ratios
+    /*// Adjust for non-square aspect ratios
     if( sps.display_aspect_ratio > 1.0f )
     	sps.width *= sps.display_aspect_ratio;
     else if( sps.display_aspect_ratio > 0.f )
-    	sps.height *= sps.display_aspect_ratio;
+    	sps.height *= sps.display_aspect_ratio;*/
     
     return true;
   }
