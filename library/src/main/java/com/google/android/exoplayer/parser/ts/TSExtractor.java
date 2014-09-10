@@ -148,7 +148,11 @@ public class TSExtractor extends Extractor {
       if (currentSample.data.remaining() < 188) {
         currentSample = allocator.allocateBiggerPacket(currentSample);
       }
-      currentSample.data.put(packet.array(), offset, dataPosition - offset);
+      if (currentSample.data.remaining() < 188) {
+          Log.d(TAG, "currentSample is too small. position=" + currentSample.data.position() + " dataPosition=" + dataPosition + " offset=" + offset);
+      } else {
+          currentSample.data.put(packet.array(), offset, dataPosition - offset);
+      }
     }
   }
 
