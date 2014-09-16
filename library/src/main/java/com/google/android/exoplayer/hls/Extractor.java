@@ -11,6 +11,7 @@ public abstract class Extractor {
   public static final int STREAM_TYPE_AAC_ADTS = 0xf;
   public static final int STREAM_TYPE_H264 = 0x1b;
   public static final int STREAM_TYPE_MPEG_AUDIO = 0x3;
+  public static final int STREAM_TYPE_MPEG_AUDIO2 = 0x4;
 
   /*
    * return null if end of stream

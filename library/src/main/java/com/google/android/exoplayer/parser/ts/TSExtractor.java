@@ -234,15 +234,17 @@ public class TSExtractor extends Extractor {
       PESHandler handler;
       for (Stream s: streams) {
         handler = null;
-        if (audio_handler == null && (s.type == STREAM_TYPE_AAC_ADTS || s.type == STREAM_TYPE_MPEG_AUDIO)) {
+        if (audio_handler == null && (s.type == STREAM_TYPE_AAC_ADTS || s.type == STREAM_TYPE_MPEG_AUDIO
+        || s.type == STREAM_TYPE_MPEG_AUDIO2)) {
           audioStreamType = s.type;
           audio_handler = new PESHandler(s.pid, Packet.TYPE_AUDIO);
           handler = audio_handler;
           //Log.d(TAG, String.format("audio found on pid %04x", s.pid));
 
           // XXX: not nice
-          if (audioStreamType == STREAM_TYPE_MPEG_AUDIO) {
+          if (audioStreamType != STREAM_TYPE_AAC_ADTS) {
             unitStartNotSignalled = true;
+            Log.e(TAG, "The audio stream is not AAC. This is very experimental right now and will likely not work.");
           }
         } else if (video_handler == null && s.type == STREAM_TYPE_H264) {
           videoStreamType = s.type;
