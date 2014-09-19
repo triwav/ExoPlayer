@@ -712,6 +712,7 @@ public class HLSSampleSource implements SampleSource {
         } catch (ParserException e) {
           e.printStackTrace();
           exception = e;
+          return null;
         }
       }
 
@@ -722,6 +723,7 @@ public class HLSSampleSource implements SampleSource {
         } catch (ParserException e) {
           Log.e(TAG, "extractor read error");
           e.printStackTrace();
+          exception = e;
           break;
         }
         if (sample == null) {
