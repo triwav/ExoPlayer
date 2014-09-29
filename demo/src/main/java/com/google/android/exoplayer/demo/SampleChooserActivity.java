@@ -50,6 +50,8 @@ public class SampleChooserActivity extends Activity {
     ListView sampleList = (ListView) findViewById(R.id.sample_list);
     final SampleAdapter sampleAdapter = new SampleAdapter(this);
 
+    sampleAdapter.add(new Header("HLS"));
+    sampleAdapter.addAll((Object[]) Samples.HLS);
     sampleAdapter.add(new Header("Simple player"));
     sampleAdapter.addAll((Object[]) Samples.SIMPLE);
     sampleAdapter.add(new Header("YouTube DASH"));
