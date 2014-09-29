@@ -148,6 +148,16 @@ package com.google.android.exoplayer.demo;
         DemoUtil.TYPE_HLS, false, true),
     new Sample("Apple-bipbop", "uid:misc:bipbop", "https://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8",
         DemoUtil.TYPE_HLS, false, true),
+    new Sample("Apple-bipbop-all", "uid:misc:bipbop-all", "http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8",
+        DemoUtil.TYPE_HLS, false, true),
+    new Sample("Bipbop basic", "uid:misc:bipbop-basic", "http://playertest.longtailvideo.com/adaptive/bipbop/bipbop.m3u8",
+        DemoUtil.TYPE_HLS, false, true),
+    new Sample("Adaptive stream", "uid:misc:bipbop-adaptive", "http://content.jwplatform.com/manifests/vM7nH0Kl.m3u8",
+        DemoUtil.TYPE_HLS, false, true),
+    new Sample("Encrypted stream", "uid:misc:bipbop-encrypted", "http://playertest.longtailvideo.com/adaptive/oceans_aes/oceans_aes.m3u8",
+        DemoUtil.TYPE_HLS, false, true),
+    new Sample("CEA-608 captions", "uid:misc:bipbop-captions", "http://playertest.longtailvideo.com/adaptive/captions/playlist.m3u8",
+        DemoUtil.TYPE_HLS, false, true)
   };
 
   public static final Sample[] MISC = new Sample[] {
