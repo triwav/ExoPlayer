@@ -99,15 +99,17 @@ public class VariantPlaylist {
       } else if (line.startsWith(M3U8Constants.EXT_X_KEY + ":")) {
         HashMap<String, String> attributes = M3U8Utils.parseAtrributeList(line.substring(M3U8Constants.EXT_X_KEY.length() + 1));
         String method = attributes.get("METHOD");
-        ke = new KeyEntry();
-        if (method.equals("AES-128")) {
-          ke.uri = attributes.get("URI");
-          if (attributes.containsKey("IV")) {
-            ke.IV = attributes.get("IV");
-            if (ke.IV.startsWith("0x")) {
-              ke.IV = ke.IV.substring(2);
+        if(!"NONE".equals(method)) {
+            ke = new KeyEntry();
+            if (method.equals("AES-128")) {
+                ke.uri = attributes.get("URI");
+                if (attributes.containsKey("IV")) {
+                    ke.IV = attributes.get("IV");
+                    if (ke.IV.startsWith("0x")) {
+                        ke.IV = ke.IV.substring(2);
+                    }
+                }
             }
-          }
         }
       } else if (line.startsWith(M3U8Constants.EXT_X_PLAYLIST_TYPE + ":")) {
         String t = line.substring(M3U8Constants.EXT_X_PLAYLIST_TYPE.length() + 1);
