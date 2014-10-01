@@ -688,7 +688,7 @@ public class HLSSampleSource implements SampleSource {
         String iv = variantEntry.keyEntry.IV;
         if (iv == null) {
           // XXX: is this nextChunkIndex or nextChunkIndex + 1 ?
-          iv = Integer.toHexString(sequence);
+          iv = Util.normalizeIV(Integer.toHexString(sequence));
         }
         uri = Uri.parse("aes://dummy?dataUrl=" + dataUrl + "&keyUrl=" + keyUrl + "&iv=" + iv);
       } else {

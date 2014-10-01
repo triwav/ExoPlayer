@@ -2,6 +2,7 @@ package com.google.android.exoplayer.hls;
 
 import com.google.android.exoplayer.ParserException;
 import com.google.android.exoplayer.upstream.DataSpec;
+import com.google.android.exoplayer.util.Util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -104,10 +105,8 @@ public class VariantPlaylist {
             if (method.equals("AES-128")) {
                 ke.uri = attributes.get("URI");
                 if (attributes.containsKey("IV")) {
-                    ke.IV = attributes.get("IV");
-                    if (ke.IV.startsWith("0x")) {
-                        ke.IV = ke.IV.substring(2);
-                    }
+                    String rawIV = attributes.get("IV");
+                    ke.IV = Util.normalizeIV(rawIV);
                 }
             }
         }
