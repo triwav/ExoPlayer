@@ -67,7 +67,7 @@ public final class AESDataSource implements DataSource {
       }
 
       synchronized (keyCache) {
-        key = keyCache.get(keyUrl);
+        key = keyCache.get(keyUri.toString());
         if (key == null) {
           DataSpec keyDataSpec = new DataSpec(keyUri, 0, DataSpec.LENGTH_UNBOUNDED, null);
           keyDataSource.open(keyDataSpec);
@@ -81,7 +81,7 @@ public final class AESDataSource implements DataSource {
             bytesRead += ret;
           }
           keyDataSource.close();
-          keyCache.put(keyUrl, key);
+          keyCache.put(keyUri.toString(), key);
         }
       }
       String ivHexa = dataSpec.uri.getQueryParameter("iv");
