@@ -145,7 +145,7 @@ package com.google.android.exoplayer.demo;
     new Sample("Audio-only2 - mp3", "uid:misc:mpeg-audio2", "https://api.beatgasm.com/v2/play/song/7758.m3u8?type=user&type_id=3032&X-Auth-Token=748be789-2116-4763-a4db-ea2a5725c69d",
         DemoUtil.TYPE_HLS_AUDIO_ONLY, false, true),
     new Sample("Audio-only3 - mp3", "uid:misc:mpeg-audio3", "https://api.beatgasm.com/v2/play/song/7484.m3u8?type=user&type_id=3032&X-Auth-Token=748be789-2116-4763-a4db-ea2a5725c69d",
-        DemoUtil.TYPE_HLS, false, true),
+        DemoUtil.TYPE_HLS_AUDIO_ONLY, false, true),
     new Sample("Apple-bipbop", "uid:misc:bipbop", "https://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8",
         DemoUtil.TYPE_HLS, false, true),
     new Sample("Apple-bipbop-all", "uid:misc:bipbop-all", "http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8",
@@ -154,9 +154,9 @@ package com.google.android.exoplayer.demo;
         DemoUtil.TYPE_HLS, false, true),
     new Sample("Adaptive stream", "uid:misc:bipbop-adaptive", "http://content.jwplatform.com/manifests/vM7nH0Kl.m3u8",
         DemoUtil.TYPE_HLS, false, true),
-    new Sample("Encrypted stream", "uid:misc:bipbop-encrypted", "http://playertest.longtailvideo.com/adaptive/oceans_aes/oceans_aes.m3u8",
-        DemoUtil.TYPE_HLS, false, true),
-    new Sample("CEA-608 captions", "uid:misc:bipbop-captions", "http://playertest.longtailvideo.com/adaptive/captions/playlist.m3u8",
+    new Sample("Encrypted stream", "uid:misc:hls-encrypted", "http://playertest.longtailvideo.com/adaptive/oceans_aes/oceans_aes.m3u8",
+        DemoUtil.TYPE_HLS, true, true),
+    new Sample("CEA-608 captions", "uid:misc:hls-captions", "http://now.video.nfl.com/i/captiontest/closedcaptiontest_,350k,550k,.mp4.csmil/master.m3u8",
         DemoUtil.TYPE_HLS, false, true)
   };
 
