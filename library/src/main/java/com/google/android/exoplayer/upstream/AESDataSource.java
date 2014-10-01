@@ -54,7 +54,10 @@ public final class AESDataSource implements DataSource {
       String keyUrl = dataSpec.uri.getQueryParameter("keyUrl");
       String dataUrl = dataSpec.uri.getQueryParameter("dataUrl");
       Uri keyUri = Uri.parse(keyUrl);
-
+      if (keyUri.isRelative()) {
+        String absolute = Util.makeAbsoluteUrl(dataUrl, keyUrl);
+        keyUri = Uri.parse(absolute);
+      }
       DataSource keyDataSource;
 
       if (keyUri.getScheme().equals("file")) {
