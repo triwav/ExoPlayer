@@ -54,7 +54,10 @@ public final class AESDataSource implements DataSource {
       String keyUrl = dataSpec.uri.getQueryParameter("keyUrl");
       String dataUrl = dataSpec.uri.getQueryParameter("dataUrl");
       Uri keyUri = Uri.parse(keyUrl);
-
+      if (keyUri.isRelative()) {
+        String absolute = Util.makeAbsoluteUrl(dataUrl, keyUrl);
+        keyUri = Uri.parse(absolute);
+      }
       DataSource keyDataSource;
 
       if (keyUri.getScheme().equals("file")) {
@@ -64,7 +67,7 @@ public final class AESDataSource implements DataSource {
       }
 
       synchronized (keyCache) {
-        key = keyCache.get(keyUrl);
+        key = keyCache.get(keyUri.toString());
         if (key == null) {
           DataSpec keyDataSpec = new DataSpec(keyUri, 0, DataSpec.LENGTH_UNBOUNDED, null);
           keyDataSource.open(keyDataSpec);
@@ -78,7 +81,7 @@ public final class AESDataSource implements DataSource {
             bytesRead += ret;
           }
           keyDataSource.close();
-          keyCache.put(keyUrl, key);
+          keyCache.put(keyUri.toString(), key);
         }
       }
       String ivHexa = dataSpec.uri.getQueryParameter("iv");

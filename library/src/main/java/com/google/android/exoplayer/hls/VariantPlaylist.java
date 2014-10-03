@@ -2,6 +2,7 @@ package com.google.android.exoplayer.hls;
 
 import com.google.android.exoplayer.ParserException;
 import com.google.android.exoplayer.upstream.DataSpec;
+import com.google.android.exoplayer.util.Util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -99,15 +100,15 @@ public class VariantPlaylist {
       } else if (line.startsWith(M3U8Constants.EXT_X_KEY + ":")) {
         HashMap<String, String> attributes = M3U8Utils.parseAtrributeList(line.substring(M3U8Constants.EXT_X_KEY.length() + 1));
         String method = attributes.get("METHOD");
-        ke = new KeyEntry();
-        if (method.equals("AES-128")) {
-          ke.uri = attributes.get("URI");
-          if (attributes.containsKey("IV")) {
-            ke.IV = attributes.get("IV");
-            if (ke.IV.startsWith("0x")) {
-              ke.IV = ke.IV.substring(2);
+        if(!"NONE".equals(method)) {
+            ke = new KeyEntry();
+            if (method.equals("AES-128")) {
+                ke.uri = attributes.get("URI");
+                if (attributes.containsKey("IV")) {
+                    String rawIV = attributes.get("IV");
+                    ke.IV = Util.normalizeIV(rawIV);
+                }
             }
-          }
         }
       } else if (line.startsWith(M3U8Constants.EXT_X_PLAYLIST_TYPE + ":")) {
         String t = line.substring(M3U8Constants.EXT_X_PLAYLIST_TYPE.length() + 1);

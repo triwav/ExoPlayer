@@ -247,4 +247,14 @@ public final class Util {
 
     return new String(hexChars);
   }
+
+  private static final String ZERO_IV = "00000000000000000000000000000000";
+  public static String normalizeIV(String rawIV) {
+    if (rawIV.startsWith("0x")) {
+      rawIV = rawIV.substring(2);
+    }
+    String zeroPadded = ZERO_IV.substring(rawIV.length()) + rawIV;
+    return zeroPadded;
+  }
+
 }
