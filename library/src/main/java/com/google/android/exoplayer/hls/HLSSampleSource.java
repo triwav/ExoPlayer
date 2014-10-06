@@ -684,6 +684,8 @@ public class HLSSampleSource implements SampleSource {
           keyUrl = URLEncoder.encode(variantEntry.keyEntry.uri, HTTP.UTF_8);
         } catch (UnsupportedEncodingException e) {
           Log.wtf(TAG, HTTP.UTF_8 + " charset not available");
+          exception = e;
+          return null;
         }
 
         String iv = variantEntry.keyEntry.IV;
