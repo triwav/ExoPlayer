@@ -539,7 +539,7 @@ public class HLSSampleSource implements SampleSource {
           sampleHolder.data.put(sample.data);
           sampleHolder.size = sampleHolder.data.position();
           sampleHolder.timeUs = (sample.pts - ptsOffset) * 1000 / 45;
-          sampleHolder.flags = MediaExtractor.SAMPLE_FLAG_SYNC;
+          sampleHolder.flags = MediaExtractor.SAMPLE_FLAG_SYNC; // Requires API level 16
           bufferSize -= sampleHolder.size;
           /*Log.d(TAG, String.format("%s: read %6d time=%8d (bufferSize=%6d)",
                   sample.type == Packet.TYPE_AUDIO ? "AUDIO":"VIDEO",
