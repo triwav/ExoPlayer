@@ -51,6 +51,37 @@ public class MainPlaylist {
       return bps - another.bps;
     }
 
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      Entry entry = (Entry) o;
+
+      if (bps != entry.bps) return false;
+      if (height != entry.height) return false;
+      if (width != entry.width) return false;
+      if (absoluteUrl != null ? !absoluteUrl.equals(entry.absoluteUrl) : entry.absoluteUrl != null)
+          return false;
+      if (!codecs.equals(entry.codecs)) return false;
+      if (name != null ? !name.equals(entry.name) : entry.name != null) return false;
+      if (url != null ? !url.equals(entry.url) : entry.url != null) return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = url != null ? url.hashCode() : 0;
+      result = 31 * result + (absoluteUrl != null ? absoluteUrl.hashCode() : 0);
+      result = 31 * result + bps;
+      result = 31 * result + width;
+      result = 31 * result + height;
+      result = 31 * result + codecs.hashCode();
+      result = 31 * result + (name != null ? name.hashCode() : 0);
+      return result;
+    }
+
     public VariantPlaylist downloadVariantPlaylist() throws IOException {
       VariantPlaylist variantPlaylist;
       URL variantURL = new URL(absoluteUrl);
