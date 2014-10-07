@@ -46,9 +46,9 @@ public final class AESDataSource implements DataSource {
       try {
         cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
       } catch (NoSuchAlgorithmException e) {
-        e.printStackTrace();
+        throw new IOException("Specified decryption algorithm not supported", e);
       } catch (NoSuchPaddingException e) {
-        e.printStackTrace();
+        throw new IOException("Specified padding scheme is not available", e);
       }
 
       String keyUrl = dataSpec.uri.getQueryParameter("keyUrl");
@@ -76,7 +76,7 @@ public final class AESDataSource implements DataSource {
           while (bytesRead < 16) {
             int ret = keyDataSource.read(key, bytesRead, 16 - bytesRead);
             if (ret <= 0) {
-              throw new IOException("cannot read key");
+              throw new IOException("Cannot read key from " + keyUri);
             }
             bytesRead += ret;
           }
@@ -92,9 +92,9 @@ public final class AESDataSource implements DataSource {
       try {
         cipher.init(Cipher.DECRYPT_MODE, cipherKey, cipherIV);
       } catch (InvalidKeyException e) {
-        e.printStackTrace();
+          throw new IOException("Given key was not accepted", e);
       } catch (InvalidAlgorithmParameterException e) {
-        e.printStackTrace();
+          throw new IOException("Given algorithm parameters was not accepted", e);
       }
 
       underlyingDataSpec = new DataSpec(Uri.parse(dataUrl), dataSpec.absoluteStreamPosition, dataSpec.length, dataSpec.key);

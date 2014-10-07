@@ -128,8 +128,7 @@ public class AACExtractor extends Extractor {
       try {
         ret = dataSource.read(data.array(), position, neededSize - position);
       } catch (IOException e) {
-        e.printStackTrace();
-        throw new ParserException("IOException");
+        throw new ParserException("Error during datasource read", e);
       }
 
       if (ret == -1) {

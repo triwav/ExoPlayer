@@ -30,4 +30,7 @@ public class ParserException extends IOException {
     super(cause);
   }
 
+  public ParserException(String message, Exception cause) {
+      super(message, cause);
+  }
 }

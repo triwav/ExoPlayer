@@ -342,8 +342,7 @@ public class TSExtractor extends Extractor {
     try {
       ret = dataSource.read(packet.array(), offset, length);
     } catch (IOException e) {
-      e.printStackTrace();
-      throw new ParserException("IOException");
+      throw new ParserException("Error during datasource read", e);
     }
     if (ret == -1) {
       if ((dataSize % 188) != 0) {

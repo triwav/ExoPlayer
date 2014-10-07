@@ -44,7 +44,7 @@ public class M3U8Utils {
       }
     }
     //add last attribute
-    if (name != "" && value != "") {
+    if (!name.isEmpty() && !value.isEmpty()) {
       attr.put(name, value);
     }
 

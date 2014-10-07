@@ -37,6 +37,8 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicLong;
 import com.google.android.exoplayer.parser.h264.H264Utils.SPS;
 
+import org.apache.http.protocol.HTTP;
+
 /**
  * Created by martin on 31/07/14.
  */
@@ -250,8 +252,7 @@ public class HLSSampleSource implements SampleSource {
     try {
       mainPlaylist = MainPlaylist.parse(this.url);
     } catch (Exception e) {
-      Log.d(TAG, "cannot parse main playlist");
-      e.printStackTrace();
+      Log.d(TAG, "Cannot parse main playlist", e);
 
     }
     if (mainPlaylist == null || mainPlaylist.entries.size() == 0) {
@@ -539,7 +540,7 @@ public class HLSSampleSource implements SampleSource {
           sampleHolder.data.put(sample.data);
           sampleHolder.size = sampleHolder.data.position();
           sampleHolder.timeUs = (sample.pts - ptsOffset) * 1000 / 45;
-          sampleHolder.flags = MediaExtractor.SAMPLE_FLAG_SYNC;
+          sampleHolder.flags = MediaExtractor.SAMPLE_FLAG_SYNC; // Requires API level 16
           bufferSize -= sampleHolder.size;
           /*Log.d(TAG, String.format("%s: read %6d time=%8d (bufferSize=%6d)",
                   sample.type == Packet.TYPE_AUDIO ? "AUDIO":"VIDEO",
@@ -679,10 +680,12 @@ public class HLSSampleSource implements SampleSource {
         String dataUrl = null;
         String keyUrl = null;
         try {
-          dataUrl = URLEncoder.encode(chunkUrl, "utf-8");
-          keyUrl = URLEncoder.encode(variantEntry.keyEntry.uri, "utf-8");
+          dataUrl = URLEncoder.encode(chunkUrl, HTTP.UTF_8);
+          keyUrl = URLEncoder.encode(variantEntry.keyEntry.uri, HTTP.UTF_8);
         } catch (UnsupportedEncodingException e) {
-          e.printStackTrace();
+          Log.wtf(TAG, HTTP.UTF_8 + " charset not available");
+          exception = e;
+          return null;
         }
 
         String iv = variantEntry.keyEntry.IV;
@@ -701,7 +704,7 @@ public class HLSSampleSource implements SampleSource {
       try {
         dataSource.open(dataSpec);
       } catch (IOException e) {
-        e.printStackTrace();
+        Log.e(TAG, "Error reading encrypted data source", e);
         exception = e;
         return null;
       }
@@ -718,7 +721,7 @@ public class HLSSampleSource implements SampleSource {
         try {
           extractor = new TSExtractorWithParsers(dataSource, allocatorsMap);
         } catch (ParserException e) {
-          e.printStackTrace();
+          Log.e(TAG, "Error parsing TS", e);
           exception = e;
           return null;
         }
@@ -729,8 +732,7 @@ public class HLSSampleSource implements SampleSource {
         try {
           sample = extractor.read();
         } catch (ParserException e) {
-          Log.e(TAG, "extractor read error");
-          e.printStackTrace();
+          Log.e(TAG, "Extractor read error", e);
           exception = e;
           break;
         }
@@ -802,7 +804,7 @@ public class HLSSampleSource implements SampleSource {
       try {
         dataSource.close();
       } catch (IOException e) {
-        e.printStackTrace();
+        Log.e(TAG, "Could not close data source", e);
       }
 
       return null;
