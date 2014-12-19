@@ -43,14 +43,16 @@ public final class Variant {
   public final String[] codecs;
   public final int width;
   public final int height;
+  public final String name;
 
-  public Variant(int index, String url, int bandwidth, String[] codecs, int width, int height) {
+  public Variant(int index, String url, int bandwidth, String[] codecs, int width, int height, String name) {
     this.index = index;
     this.bandwidth = bandwidth;
     this.url = url;
     this.codecs = codecs;
     this.width = width;
     this.height = height;
+    this.name = name;
   }
 
 }

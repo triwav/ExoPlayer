@@ -44,6 +44,7 @@ public final class HlsPlaylistParser implements ManifestParser<HlsPlaylist> {
   private static final String BANDWIDTH_ATTR = "BANDWIDTH";
   private static final String CODECS_ATTR = "CODECS";
   private static final String RESOLUTION_ATTR = "RESOLUTION";
+  private static final String NAME_ATTR = "NAME";
 
   private static final String DISCONTINUITY_TAG = "#EXT-X-DISCONTINUITY";
   private static final String MEDIA_DURATION_TAG = "#EXTINF";
@@ -63,6 +64,8 @@ public final class HlsPlaylistParser implements ManifestParser<HlsPlaylist> {
       Pattern.compile(CODECS_ATTR + "=\"(.+)\"");
   private static final Pattern RESOLUTION_ATTR_REGEX =
       Pattern.compile(RESOLUTION_ATTR + "=(\\d+x\\d+)");
+  private static final Pattern NAME_ATTR_REGEX =
+      Pattern.compile(NAME_ATTR + "=([^,.*]+)");
 
   private static final Pattern MEDIA_DURATION_REGEX =
       Pattern.compile(MEDIA_DURATION_TAG + ":([\\d.]+),");
@@ -126,6 +129,7 @@ public final class HlsPlaylistParser implements ManifestParser<HlsPlaylist> {
     int width = -1;
     int height = -1;
     int variantIndex = 0;
+    String name = null;
 
     String line;
     while (iterator.hasNext()) {
@@ -148,8 +152,10 @@ public final class HlsPlaylistParser implements ManifestParser<HlsPlaylist> {
           width = -1;
           height = -1;
         }
+        name = HlsParserUtil.parseOptionalStringAttr(line,
+                  NAME_ATTR_REGEX);
       } else if (!line.startsWith("#")) {
-        variants.add(new Variant(variantIndex++, line, bandwidth, codecs, width, height));
+        variants.add(new Variant(variantIndex++, line, bandwidth, codecs, width, height, name));
         bandwidth = 0;
         codecs = null;
         width = -1;
