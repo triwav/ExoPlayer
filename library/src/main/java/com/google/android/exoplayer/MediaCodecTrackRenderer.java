@@ -27,7 +27,6 @@ import android.media.MediaCrypto;
 import android.media.MediaExtractor;
 import android.os.Handler;
 import android.os.SystemClock;
-import android.util.Log;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
