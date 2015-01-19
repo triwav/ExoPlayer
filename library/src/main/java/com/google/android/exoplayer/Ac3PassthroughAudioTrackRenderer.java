@@ -51,6 +51,13 @@ public final class Ac3PassthroughAudioTrackRenderer extends TrackRenderer {
      */
     void onAudioTrackInitializationError(AudioTrack.InitializationException e);
 
+    /**
+     * Invoked when an {@link AudioTrack} write fails.
+     *
+     * @param e The corresponding exception.
+     */
+    void onAudioTrackWriteError(AudioTrack.WriteException e);
+
   }
 
   /**
@@ -65,9 +72,6 @@ public final class Ac3PassthroughAudioTrackRenderer extends TrackRenderer {
 
   /** Default buffer size for AC-3 packets from the sample source */
   private static final int DEFAULT_BUFFER_SIZE = 16384 * 2;
-
-  /** Multiplication factor for the audio track's buffer size. */
-  private static final int MIN_BUFFER_MULTIPLICATION_FACTOR = 3;
 
   private final Handler eventHandler;
   private final EventListener eventListener;
@@ -96,15 +100,15 @@ public final class Ac3PassthroughAudioTrackRenderer extends TrackRenderer {
    *     null if delivery of events is not required.
    * @param eventListener A listener of events. May be null if delivery of events is not required.
    */
-  public Ac3PassthroughAudioTrackRenderer(
-      SampleSource source, Handler eventHandler, EventListener eventListener) {
+  public Ac3PassthroughAudioTrackRenderer(SampleSource source, Handler eventHandler,
+      EventListener eventListener) {
     this.source = Assertions.checkNotNull(source);
     this.eventHandler = eventHandler;
     this.eventListener = eventListener;
     sampleHolder = new SampleHolder(SampleHolder.BUFFER_REPLACEMENT_MODE_NORMAL);
     sampleHolder.data = ByteBuffer.allocateDirect(DEFAULT_BUFFER_SIZE);
     formatHolder = new MediaFormatHolder();
-    audioTrack = new AudioTrack(MIN_BUFFER_MULTIPLICATION_FACTOR);
+    audioTrack = new AudioTrack();
     shouldReadInputBuffer = true;
   }
 
@@ -188,7 +192,7 @@ public final class Ac3PassthroughAudioTrackRenderer extends TrackRenderer {
     }
   }
 
-  private void feedInputBuffer() throws IOException {
+  private void feedInputBuffer() throws IOException, ExoPlaybackException {
     if (!audioTrack.isInitialized() || inputStreamEnded) {
       return;
     }
@@ -212,8 +216,14 @@ public final class Ac3PassthroughAudioTrackRenderer extends TrackRenderer {
       shouldReadInputBuffer = false;
     }
 
-    int handleBufferResult =
-        audioTrack.handleBuffer(sampleHolder.data, 0, sampleHolder.size, sampleHolder.timeUs);
+    int handleBufferResult;
+    try {
+      handleBufferResult =
+          audioTrack.handleBuffer(sampleHolder.data, 0, sampleHolder.size, sampleHolder.timeUs);
+    } catch (AudioTrack.WriteException e) {
+      notifyAudioTrackWriteError(e);
+      throw new ExoPlaybackException(e);
+    }
 
     // If we are out of sync, allow currentPositionUs to jump backwards.
     if ((handleBufferResult & AudioTrack.RESULT_POSITION_DISCONTINUITY) != 0) {
@@ -303,6 +313,17 @@ public final class Ac3PassthroughAudioTrackRenderer extends TrackRenderer {
         @Override
         public void run() {
           eventListener.onAudioTrackInitializationError(e);
+        }
+      });
+    }
+  }
+
+  private void notifyAudioTrackWriteError(final AudioTrack.WriteException e) {
+    if (eventHandler != null && eventListener != null) {
+      eventHandler.post(new Runnable()  {
+        @Override
+        public void run() {
+          eventListener.onAudioTrackWriteError(e);
         }
       });
     }

@@ -38,7 +38,7 @@ public class HlsSampleSource implements SampleSource, Loader.Callback {
   /**
    * The default minimum number of times to retry loading data prior to failing.
    */
-  public static final int DEFAULT_MIN_LOADABLE_RETRY_COUNT = 1;
+  public static final int DEFAULT_MIN_LOADABLE_RETRY_COUNT = 3;
 
   private static final int NO_RESET_PENDING = -1;
 
@@ -160,6 +160,9 @@ public class HlsSampleSource implements SampleSource, Loader.Callback {
     Assertions.checkState(prepared);
     Assertions.checkState(enabledTrackCount > 0);
     downstreamPositionUs = playbackPositionUs;
+    if (!extractors.isEmpty()) {
+      discardSamplesForDisabledTracks(extractors.getFirst(), downstreamPositionUs);
+    }
     return continueBufferingInternal();
   }
 
@@ -168,7 +171,7 @@ public class HlsSampleSource implements SampleSource, Loader.Callback {
     if (isPendingReset() || extractors.isEmpty()) {
       return false;
     }
-    boolean haveSamples = extractors.getFirst().hasSamples();
+    boolean haveSamples = prepared && haveSamplesForEnabledTracks(getCurrentExtractor());
     if (!haveSamples) {
       maybeThrowLoadableException();
     }
@@ -191,13 +194,7 @@ public class HlsSampleSource implements SampleSource, Loader.Callback {
       return NOTHING_READ;
     }
 
-    TsExtractor extractor = extractors.getFirst();
-    while (extractors.size() > 1 && !extractor.hasSamples()) {
-      // We're finished reading from the extractor for all tracks, and so can discard it.
-      extractors.removeFirst().release();
-      extractor = extractors.getFirst();
-    }
-
+    TsExtractor extractor = getCurrentExtractor();
     if (extractors.size() > 1) {
       // If there's more than one extractor, attempt to configure a seamless splice from the
       // current one to the next one.
@@ -313,6 +310,49 @@ public class HlsSampleSource implements SampleSource, Loader.Callback {
     currentLoadableExceptionCount++;
     currentLoadableExceptionTimestamp = SystemClock.elapsedRealtime();
     maybeStartLoading();
+  }
+
+  /**
+   * Gets the current extractor from which samples should be read.
+   * <p>
+   * Calling this method discards extractors without any samples from the front of the queue. The
+   * last extractor is retained even if it doesn't have any samples.
+   * <p>
+   * This method must not be called unless {@link #extractors} is non-empty.
+   *
+   * @return The current extractor from which samples should be read. Guaranteed to be non-null.
+   */
+  private TsExtractor getCurrentExtractor() {
+    TsExtractor extractor = extractors.getFirst();
+    while (extractors.size() > 1 && !haveSamplesForEnabledTracks(extractor)) {
+      // We're finished reading from the extractor for all tracks, and so can discard it.
+      extractors.removeFirst().release();
+      extractor = extractors.getFirst();
+    }
+    return extractor;
+  }
+
+  private void discardSamplesForDisabledTracks(TsExtractor extractor, long timeUs) {
+    if (!extractor.isPrepared()) {
+      return;
+    }
+    for (int i = 0; i < trackEnabledStates.length; i++) {
+      if (!trackEnabledStates[i]) {
+        extractor.discardUntil(i, timeUs);
+      }
+    }
+  }
+
+  private boolean haveSamplesForEnabledTracks(TsExtractor extractor) {
+    if (!extractor.isPrepared()) {
+      return false;
+    }
+    for (int i = 0; i < trackEnabledStates.length; i++) {
+      if (trackEnabledStates[i] && extractor.hasSamples(i)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private void maybeThrowLoadableException() throws IOException {

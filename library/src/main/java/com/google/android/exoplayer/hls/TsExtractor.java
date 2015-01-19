@@ -187,19 +187,14 @@ public final class TsExtractor {
   }
 
   /**
-   * Whether samples are available for reading from {@link #getSample(int, SampleHolder)} for any
-   * track.
+   * Discards samples for the specified track up to the specified time.
    *
-   * @return True if samples are available for reading from {@link #getSample(int, SampleHolder)}
-   *     for any track. False otherwise.
+   * @param track The track from which samples should be discarded.
+   * @param timeUs The time up to which samples should be discarded, in microseconds.
    */
-  public boolean hasSamples() {
-    for (int i = 0; i < sampleQueues.size(); i++) {
-      if (hasSamples(i)) {
-        return true;
-      }
-    }
-    return false;
+  public void discardUntil(int track, long timeUs) {
+    Assertions.checkState(prepared);
+    sampleQueues.valueAt(track).discardUntil(timeUs);
   }
 
   /**
@@ -210,6 +205,7 @@ public final class TsExtractor {
    *     for the specified track. False otherwise.
    */
   public boolean hasSamples(int track) {
+    Assertions.checkState(prepared);
     return sampleQueues.valueAt(track).peek() != null;
   }
 
@@ -320,21 +316,17 @@ public final class TsExtractor {
         tsBuffer.skipBytes(pointerField);
       }
 
-      // Skip PAT header.
-      tsBuffer.skipBits(64); // 8+1+1+2+12+16+2+5+1+8+8
+      tsBuffer.skipBits(12); // 8+1+1+2
+      int sectionLength = tsBuffer.readBits(12);
+      tsBuffer.skipBits(40); // 16+2+5+1+8+8
 
-      // Only read the first program and take it.
-
-      // Skip program_number.
-      tsBuffer.skipBits(16 + 3);
-      int pid = tsBuffer.readBits(13);
-
-      // Pick the first program.
-      if (tsPayloadReaders.get(pid) == null) {
+      int programCount = (sectionLength - 9) / 4;
+      for (int i = 0; i < programCount; i++) {
+        tsBuffer.skipBits(19);
+        int pid = tsBuffer.readBits(13);
         tsPayloadReaders.put(pid, new PmtReader());
       }
 
-      // Skip other programs if exist.
       // Skip CRC_32.
     }
 
@@ -427,10 +419,17 @@ public final class TsExtractor {
     @Override
     public void read(BitArray tsBuffer, boolean payloadUnitStartIndicator) {
       if (payloadUnitStartIndicator && !pesBuffer.isEmpty()) {
-        // We've encountered the start of the next packet, but haven't yet read the body. Read it.
-        // Note that this should only happen if the packet length was unspecified.
-        Assertions.checkState(packetLength == 0);
-        readPacketBody();
+        if (packetLength == 0) {
+          // The length of the previous packet was unspecified. We've now seen the start of the
+          // next one, so consume the previous packet's body.
+          readPacketBody();
+        } else {
+          // Either we didn't have enough data to read the length of the previous packet, or we
+          // did read the length but didn't receive that amount of data. Neither case is expected.
+          Log.w(TAG, "Unexpected packet fragment of length " + pesBuffer.bytesLeft());
+          pesBuffer.reset();
+          packetLength = -1;
+        }
       }
 
       pesBuffer.append(tsBuffer, tsBuffer.bytesLeft());
@@ -448,7 +447,7 @@ public final class TsExtractor {
     private void readPacketStart() {
       int startCodePrefix = pesBuffer.readBits(24);
       if (startCodePrefix != 0x000001) {
-        Log.e(TAG, "Unexpected start code prefix: " + startCodePrefix);
+        Log.w(TAG, "Unexpected start code prefix: " + startCodePrefix);
         pesBuffer.reset();
         packetLength = -1;
       } else {
@@ -516,7 +515,7 @@ public final class TsExtractor {
     private final ConcurrentLinkedQueue<Sample> internalQueue;
 
     // Accessed only by the consuming thread.
-    private boolean readFirstFrame;
+    private boolean needKeyframe;
     private long lastReadTimeUs;
     private long spliceOutTimeUs;
 
@@ -526,8 +525,9 @@ public final class TsExtractor {
     protected SampleQueue(SamplePool samplePool) {
       this.samplePool = samplePool;
       internalQueue = new ConcurrentLinkedQueue<Sample>();
-      spliceOutTimeUs = Long.MIN_VALUE;
+      needKeyframe = true;
       lastReadTimeUs = Long.MIN_VALUE;
+      spliceOutTimeUs = Long.MIN_VALUE;
     }
 
     public boolean hasMediaFormat() {
@@ -554,7 +554,7 @@ public final class TsExtractor {
       Sample head = peek();
       if (head != null) {
         internalQueue.remove();
-        readFirstFrame = true;
+        needKeyframe = false;
         lastReadTimeUs = head.timeUs;
       }
       return head;
@@ -567,7 +567,7 @@ public final class TsExtractor {
      */
     public Sample peek() {
       Sample head = internalQueue.peek();
-      if (!readFirstFrame) {
+      if (needKeyframe) {
         // Peeking discard of samples until we find a keyframe or run out of available samples.
         while (head != null && !head.isKeyframe) {
           recycle(head);
@@ -585,6 +585,24 @@ public final class TsExtractor {
         return null;
       }
       return head;
+    }
+
+    /**
+     * Discards samples from the queue up to the specified time.
+     *
+     * @param timeUs The time up to which samples should be discarded, in microseconds.
+     */
+    public void discardUntil(long timeUs) {
+      Sample head = peek();
+      while (head != null && head.timeUs < timeUs) {
+        recycle(head);
+        internalQueue.remove();
+        head = internalQueue.peek();
+        // We're discarding at least one sample, so any subsequent read will need to start at
+        // a keyframe.
+        needKeyframe = true;
+      }
+      lastReadTimeUs = Long.MIN_VALUE;
     }
 
     /**
