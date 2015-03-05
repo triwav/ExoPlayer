@@ -263,7 +263,7 @@ import java.util.List;
     long durationUs = 0;
     for (int i = 0; i < renderers.length; i++) {
       TrackRenderer renderer = renderers[i];
-      if (renderer.getState() != TrackRenderer.STATE_PREPARED && renderer.getState() != TrackRenderer.STATE_STARTED) {
+      if (renderer.getState() != TrackRenderer.STATE_PREPARED && renderer.getState() != TrackRenderer.STATE_STARTED && renderer.getState() != TrackRenderer.STATE_ENABLED) {
         continue;
       }
       if (durationUs == TrackRenderer.UNKNOWN_TIME) {
