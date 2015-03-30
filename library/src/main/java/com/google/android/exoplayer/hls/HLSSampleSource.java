@@ -640,7 +640,7 @@ public class HLSSampleSource implements SampleSource {
     for (int i = lastKnownSequence + 1 - variantPlaylist.mediaSequence; i < variantPlaylist.entries.size(); i++) {
       double extinf = variantPlaylist.entries.get(i).extinf;
       rememberedExtinf.add(extinf);
-      durationUs += (long)extinf * 1000000;
+      durationUs += extinf * 1000000;
       lastKnownSequence++;
     }
 
