@@ -315,7 +315,7 @@ public class TSExtractor extends Extractor {
     if (allocators == null) {
       allocators = new TSPacketAllocator[2];
       allocators[Packet.TYPE_AUDIO] = new TSPacketAllocator(100*1024);
-      allocators[Packet.TYPE_VIDEO] = new TSPacketAllocator(500*1024);
+      allocators[Packet.TYPE_VIDEO] = new TSPacketAllocator(1000*1024);
       // remember them for later
       allocatorsMap.put(getClass(), allocators);
     }
